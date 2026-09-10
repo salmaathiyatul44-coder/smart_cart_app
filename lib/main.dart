@@ -32,84 +32,6 @@ class MyApp extends StatelessWidget {
 class ProductGridPage extends StatelessWidget {
   const ProductGridPage({super.key});
 
-  void _showAddProductDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final priceController = TextEditingController();
-    final imageController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1B1B26),
-        title: const Text('Tambah Produk Baru', style: TextStyle(color: Colors.white)),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Nama Produk',
-                  labelStyle: TextStyle(color: Colors.grey),
-                ),
-              ),
-              TextField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Harga (contoh: 500000)',
-                  labelStyle: TextStyle(color: Colors.grey),
-                ),
-              ),
-              TextField(
-                controller: imageController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'URL Gambar (opsional)',
-                  labelStyle: TextStyle(color: Colors.grey),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE91E63),
-            ),
-            onPressed: () {
-              if (nameController.text.isNotEmpty && priceController.text.isNotEmpty) {
-                String cleanPrice = priceController.text.replaceAll('.', '').replaceAll(',', '.');
-                double? parsedPrice = double.tryParse(cleanPrice);
-
-                String imageUrl = imageController.text.trim();
-                if (imageUrl.isEmpty) {
-                  imageUrl = 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500';
-                }
-
-                if (parsedPrice != null) {
-                  Provider.of<CartProvider>(context, listen: false).addProduct(
-                    nameController.text,
-                    parsedPrice,
-                    imageUrl,
-                  );
-                  Navigator.pop(ctx);
-                }
-              }
-            },
-            child: const Text('Simpan', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final cartData = Provider.of<CartProvider>(context);
@@ -123,45 +45,54 @@ class ProductGridPage extends StatelessWidget {
         ),
         actions: [
           Consumer<CartProvider>(
-            builder: (ctx, cart, child) => Stack(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 26),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (ctx) => const CartScreen()),
-                    );
-                  },
-                ),
-                if (cart.itemCount > 0)
-                  Positioned(
-                    right: 6,
-                    top: 6,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE91E63),
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 18,
-                        minHeight: 18,
-                      ),
-                      child: Text(
-                        '${cart.itemCount}',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+            builder: (ctx, cart, child) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CartScreen()),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.only(right: 16, left: 10, top: 10, bottom: 10),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      color: Colors.white,
+                      size: 28,
                     ),
-                  )
-              ],
+                    if (cart.itemCount > 0)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE91E63),
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '${cart.itemCount}',
+                            style: const TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      )
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 10),
         ],
       ),
       body: products.isEmpty
@@ -253,11 +184,6 @@ class ProductGridPage extends StatelessWidget {
                 ),
               ),
             ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFE91E63),
-        onPressed: () => _showAddProductDialog(context),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 }
@@ -270,10 +196,15 @@ class CartScreen extends StatelessWidget {
     final cart = Provider.of<CartProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: const Text('Keranjang Belanja'),
-        backgroundColor: const Color(0xFF121212),
+        title: const Text('< Keranjang Belanja', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF000000),
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Column(
         children: [
@@ -333,7 +264,10 @@ class CartScreen extends StatelessWidget {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Image.network(item.imageUrl, fit: BoxFit.contain),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(item.imageUrl, fit: BoxFit.contain),
+                              ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
